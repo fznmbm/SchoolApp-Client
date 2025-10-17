@@ -24,7 +24,7 @@ const ApplicationView = lazy(() => import('@/pages/applications/ApplicationView'
 
 
 // Lazy load components
-const Login = lazy(() => import('@/pages/login'));
+const Login = lazy(() => import('@/pages/Login'));
 const Layout = lazy(() => import('@components/layout/RootLayout'));
 const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'));
 const Calendar = lazy(() => import('@pages/jobs/CalendarPage'));
