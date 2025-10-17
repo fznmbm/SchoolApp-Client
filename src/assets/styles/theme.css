@@ -1,0 +1,47 @@
+:root {
+  /* Light theme (default) */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f3f4f6;
+  --color-bg-accent: #60a5fa;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-accent: #2563eb;
+  --color-border: #e5e7eb;
+  --color-input: #ffffff;
+  --color-input-focus: #ffffff;
+  --color-input-text: #111827;       /* Added for input text */
+  --color-input-placeholder: #9ca3af; /* Added for placeholder text */
+}
+
+.dark {
+  /* Dark theme - improved contrast */
+  --color-bg-primary: #1f2937;
+  --color-bg-secondary: #111827;
+  --color-bg-accent: #3b82f6;
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #e5e7eb;
+  --color-text-accent: #60a5fa;
+  --color-border: #374151;
+  --color-input: #374151;
+  --color-input-focus: #4b5563;
+  --color-input-text: #f9fafb;       /* Explicit light text for inputs */
+  --color-input-placeholder: #9ca3af; /* Medium gray for placeholders */
+}
+
+
+  .card {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+  }
+  
+  .input {
+    background-color: var(--color-input);
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+  }
+  
+  .button-primary {
+    background-color: var(--color-bg-accent);
+    color: white;
+  }
