@@ -7,8 +7,8 @@ import {
   MapIcon,
 } from '@heroicons/react/24/outline';
 import { ThemeContext } from '@context/ThemeContext';
-import Header from './Header/Header';
-import Sidebar from './Sidebar/Sidebar';
+import Header from './header/Header';
+import Sidebar from './sidebar/Sidebar';
 
 const RootLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
