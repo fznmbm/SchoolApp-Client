@@ -1,6 +1,6 @@
 import { lazy } from 'react';
 
-const AdminList = lazy(() => import('@pages/admin/adminList'));
+const AdminList = lazy(() => import('@pages/admin/AdminList'));
 const AdminCreate = lazy(() => import('@pages/admin/AdminCreate'));
 const AdminEdit = lazy(() => import('@pages/admin/AdminEdit'));
 const AdminView = lazy(() => import('@pages/admin/AdminView'));
