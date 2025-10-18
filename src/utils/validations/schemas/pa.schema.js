@@ -80,26 +80,26 @@ export const paValidationSchema = Yup.object().shape({
 
   trainings: Yup.array().of(
     Yup.object().shape({
-      nameId: Yup.string()
-        .required('Training type is required'),
+      name: Yup.string()
+        .nullable(),
 
       completionDate: Yup.date()
-        .when('nameId', {
-          is: (nameId) => nameId && nameId.length > 0,
+        .when('name', {
+          is: (name) => name && name.length > 0,
           then: (schema) => schema.required('Completion date is required').max(new Date(), 'Completion date cannot be in the future'),
           otherwise: (schema) => schema.nullable(),
         }),
 
       certificateNumber: Yup.string()
-        .when('nameId', {
-          is: (nameId) => nameId && nameId.length > 0,
+        .when('name', {
+          is: (name) => name && name.length > 0,
           then: (schema) => schema.required('Certificate number is required').min(4, 'Certificate number must be at least 4 characters').max(50, 'Certificate number must be less than 50 characters'),
           otherwise: (schema) => schema.nullable(),
         }),
 
       expiryDate: Yup.date()
-        .when('nameId', {
-          is: (nameId) => nameId && nameId.length > 0,
+        .when('name', {
+          is: (name) => name && name.length > 0,
           then: (schema) => schema.required('Expiry date is required').min(Yup.ref('completionDate'), 'Expiry date must be after completion date'),
           otherwise: (schema) => schema.nullable(),
         }),

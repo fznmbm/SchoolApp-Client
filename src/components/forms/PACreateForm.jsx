@@ -183,6 +183,14 @@ const PAForm = ({
     try {
       console.log("Submitting PA form with values:", values);
       
+      // Check for validation errors before proceeding
+      const errors = formikHelpers.errors;
+      const touched = formikHelpers.touched;
+      
+      if (errors && Object.keys(errors).length > 0) {
+        return;
+      }
+      
       const formData = transformFormData(values);
       
       if (process.env.NODE_ENV !== 'production') {
