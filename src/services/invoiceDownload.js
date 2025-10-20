@@ -1,5 +1,5 @@
 // services/invoiceDownload.js
-import { format, parseISO, eachDayOfInterval, getDay, getWeek } from 'date-fns';
+import { format, parseISO, eachDayOfInterval, getDay } from 'date-fns';
 
 /**
  * Maps service type codes to readable descriptions
@@ -253,6 +253,8 @@ const generateCompleteDateRangeFromInvoice = (invoiceData) => {
   
   // Group by week
   const weekMap = new Map();
+  // Use sequential week numbering for display (Week 1, Week 2, ...)
+  let displayWeekCounter = 1;
   
   allDates.forEach(date => {
     const dayOfWeek = getDay(date); // 0 = Sunday, 6 = Saturday
@@ -266,7 +268,7 @@ const generateCompleteDateRangeFromInvoice = (invoiceData) => {
     
     if (!weekMap.has(weekKey)) {
       weekMap.set(weekKey, {
-        weekNumber: getWeek(date),
+        weekNumber: displayWeekCounter++,
         days: []
       });
     }
