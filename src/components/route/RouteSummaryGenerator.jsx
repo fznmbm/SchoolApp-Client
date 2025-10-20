@@ -8,6 +8,7 @@ import {
   XMarkIcon
 } from '@heroicons/react/24/outline';
 import Button from '@components/common/Button';
+import { getDrivers } from '@services/drivers';
 import { getSchool } from '@services/school';
 
 
@@ -17,6 +18,11 @@ const RouteSummaryGenerator = ({ route }) => {
   const [summary, setSummary] = useState('');
   const [schoolCache, setSchoolCache] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [driversWithPhone, setDriversWithPhone] = useState([]);
+  const [isDriversLoading, setIsDriversLoading] = useState(false);
+  const [selectedDriverId, setSelectedDriverId] = useState('');
+  const [customPhone, setCustomPhone] = useState('');
 
   // Prefetch all school data that might be needed for this route
   useEffect(() => {
@@ -260,6 +266,50 @@ const RouteSummaryGenerator = ({ route }) => {
     }
   };
 
+  // Open Share modal and fetch drivers lazily
+  const handleOpenShare = async () => {
+    setIsShareOpen(true);
+    if (driversWithPhone.length > 0) return;
+    try {
+      setIsDriversLoading(true);
+      // Fetch drivers; backend supports pagination, but here we request a larger page if available
+      const data = await getDrivers({});
+      const list = Array.isArray(data) ? data : (data?.docs || data?.data || []);
+      const filtered = list.filter(d => d && d.phoneNumber && String(d.phoneNumber).trim().length > 0);
+      // Map to compact objects for dropdown
+      const compact = filtered.map(d => ({ _id: d._id, name: d.name || d.shortName || 'Unnamed', phoneNumber: d.phoneNumber }));
+      setDriversWithPhone(compact);
+    } catch (e) {
+      console.error('Failed to load drivers for sharing:', e);
+    } finally {
+      setIsDriversLoading(false);
+    }
+  };
+
+  const cleanPhone = (phone) => (phone || '').replace(/\D/g, '');
+
+  const handleShareSubmit = () => {
+    // Resolve target phone
+    let phone = '';
+    if (selectedDriverId) {
+      const d = driversWithPhone.find(x => x._id === selectedDriverId);
+      phone = d?.phoneNumber || '';
+    } else {
+      phone = customPhone;
+    }
+
+    const cleaned = cleanPhone(phone);
+    if (!cleaned) {
+      alert('Please select a driver with a phone number or enter a valid phone number.');
+      return;
+    }
+
+    const encodedMessage = encodeURIComponent(summary || '');
+    const url = `https://wa.me/${cleaned}?text=${encodedMessage}`;
+    window.open(url, '_blank');
+    setIsShareOpen(false);
+  };
+
   return (
     <>
       <Button
@@ -343,6 +393,99 @@ const RouteSummaryGenerator = ({ route }) => {
                         </>
                       )}
                     </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="md"
+                      className="ml-2"
+                      onClick={handleOpenShare}
+                    >
+                      Share
+                    </Button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* Share Modal */}
+      <Transition appear show={isShareOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={() => setIsShareOpen(false)}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-lg transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+                  <div className="flex justify-between items-center">
+                    <Dialog.Title
+                      as="h3"
+                      className="text-lg font-medium leading-6 text-gray-900 dark:text-white"
+                    >
+                      Share via WhatsApp
+                    </Dialog.Title>
+                    <Button onClick={() => setIsShareOpen(false)} variant="link" size="sm" className="rounded-full p-1">
+                      <XMarkIcon className="h-6 w-6" />
+                    </Button>
+                  </div>
+
+                  <div className="mt-4 space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Driver (optional)</label>
+                      <select
+                        className="w-full border rounded-md p-2 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+                        value={selectedDriverId}
+                        onChange={(e) => setSelectedDriverId(e.target.value)}
+                        disabled={isDriversLoading}
+                      >
+                        <option value="">-- Choose driver --</option>
+                        {driversWithPhone.map((d) => (
+                          <option key={d._id} value={d._id}>{`${d.name} (${d.phoneNumber})`}</option>
+                        ))}
+                      </select>
+                      <div className="mt-2">
+                        <Button variant="ghost" size="sm" onClick={handleOpenShare} disabled={isDriversLoading}>
+                          {isDriversLoading ? 'Loading drivers...' : (driversWithPhone.length ? 'Refresh list' : 'Load drivers')}
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Or enter phone number (with country code)</label>
+                      <input
+                        type="text"
+                        className="w-full border rounded-md p-2 bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700"
+                        placeholder="e.g., 447700900123"
+                        value={customPhone}
+                        onChange={(e) => setCustomPhone(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-gray-500">If a driver is selected, that number will be used. Otherwise, the custom number is used.</p>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <Button variant="outline" className="mr-2" onClick={() => setIsShareOpen(false)}>Cancel</Button>
+                      <Button variant="primary" onClick={handleShareSubmit}>Open WhatsApp</Button>
+                    </div>
                   </div>
                 </Dialog.Panel>
               </Transition.Child>

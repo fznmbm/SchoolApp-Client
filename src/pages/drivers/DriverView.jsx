@@ -21,6 +21,7 @@ import ActiveJobs from "@components/driver/ActiveJobs";
 import DocumentsList from "@components/driver/DocumentsList";
 import TrainingList from "@components/driver/TrainingList";
 import InvoiceGenerator from '@components/driver/InvoiceGenerator';
+import RequestDocuments from '@components/driver/RequestDocuments';
 import { HistoryTracker } from '@components/common/HistoryTracker';
 import { DriverHistory } from '@components/driver/DriverHistory';
 import { getAllTrainingsForMapping } from "@/services/training";
@@ -35,6 +36,7 @@ const DriverView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showInvoiceGenerator, setShowInvoiceGenerator] = useState(false);
+  const [showRequestDocs, setShowRequestDocs] = useState(false);
   const queryClient = useQueryClient();
 
   const {
@@ -187,6 +189,12 @@ const DriverView = () => {
             Generate Invoice
           </Button>
           <Button
+            onClick={() => setShowRequestDocs(true)}
+            variant="outline"
+          >
+            Request Documents
+          </Button>
+          <Button
             onClick={handleEdit}
             variant="primary"
           >
@@ -208,6 +216,11 @@ const DriverView = () => {
           driverId={id}
           isOpen={showInvoiceGenerator}
           onClose={() => setShowInvoiceGenerator(false)}
+        />
+        <RequestDocuments
+          isOpen={showRequestDocs}
+          onClose={() => setShowRequestDocs(false)}
+          driver={driver}
         />
         
         {/* Main Cards */}
