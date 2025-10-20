@@ -3,7 +3,7 @@ import { Dialog } from '@headlessui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Formik, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import WhatsAppService from '@services/whatsapp';
 import Input from '@components/common/input/Input';
 
@@ -20,6 +20,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template = null }) => {
     content: template?.content || ''
   };
   
+  const queryClient = useQueryClient();
   const saveTemplateMutation = useMutation({
     mutationFn: (values) => {
       if (isEditMode) {
@@ -29,6 +30,7 @@ const TemplateModal = ({ isOpen, onClose, onSave, template = null }) => {
     },
     onSuccess: () => {
       if (onSave) onSave();
+      queryClient.invalidateQueries({ queryKey: ['whatsAppTemplates'] });
       onClose();
     },
     onError: (error) => {
