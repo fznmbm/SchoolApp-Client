@@ -334,7 +334,7 @@ const ApplicationForm = () => {
               <h2 className="text-xl font-semibold text-white border-b border-gray-600 pb-2">
                 Position <span className="text-red-500">*</span>
               </h2>
-              <div className="flex gap-6 items-center">
+              <div className="flex gap-6">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
@@ -361,12 +361,7 @@ const ApplicationForm = () => {
                   />
                   <span className="text-gray-200">PA</span>
                 </label>
-                {/* ✨ CONDITIONAL REMINDER ADDED HERE ✨ */}
-                {!formData.position && (
-                  <p className="text-yellow-400 text-sm font-medium ml-4">
-                    ← Please select a position to continue
-                  </p>
-                )}
+                <p> </p>
               </div>
               {errors.position && (
                 <p className="text-red-500 text-sm mt-1">{errors.position}</p>
