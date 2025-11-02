@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import SimpleInput from './SimpleInput';
-import SimpleDatePicker from './SimpleDatePicker';
-import SimpleFileUpload from './SimpleFileUpload';
-import Button from '../../common/Button';
-import { submitApplication } from '../../../services/application';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import SimpleInput from "./SimpleInput";
+import SimpleDatePicker from "./SimpleDatePicker";
+import SimpleFileUpload from "./SimpleFileUpload";
+import Button from "../../common/Button";
 
 const ApplicationForm = () => {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -204,7 +204,19 @@ const ApplicationForm = () => {
         formDataToSend.append("documents", formData.workPermitDetails.document);
       }
 
-      await submitApplication(formDataToSend);
+      const response = await fetch(
+        "http://localhost:5000/applications/submit",
+        {
+          method: "POST",
+          body: formDataToSend,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to submit application");
+      }
+
+      await response.json();
       setShowSuccess(true);
       setFormData({
         position: "",
@@ -322,7 +334,7 @@ const ApplicationForm = () => {
               <h2 className="text-xl font-semibold text-white border-b border-gray-600 pb-2">
                 Position <span className="text-red-500">*</span>
               </h2>
-              <div className="flex gap-6 items-center">
+              <div className="flex gap-6">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
@@ -349,12 +361,7 @@ const ApplicationForm = () => {
                   />
                   <span className="text-gray-200">PA</span>
                 </label>
-                {/* ✨ CONDITIONAL REMINDER ADDED HERE ✨ */}
-                {!formData.position && (
-                  <p className="text-yellow-400 text-sm font-medium ml-4">
-                    ← Please select a position to continue
-                  </p>
-                )}
+                <p> </p>
               </div>
               {errors.position && (
                 <p className="text-red-500 text-sm mt-1">{errors.position}</p>
