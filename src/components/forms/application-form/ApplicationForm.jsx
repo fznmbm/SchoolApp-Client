@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import SimpleInput from './SimpleInput';
 import SimpleDatePicker from './SimpleDatePicker';
 import SimpleFileUpload from './SimpleFileUpload';
 import Button from '../../common/Button';
+import { submitApplication } from '../../../services/application';
 
 const ApplicationForm = () => {
   const [showSuccess, setShowSuccess] = useState(false);
@@ -200,16 +200,7 @@ const ApplicationForm = () => {
         formDataToSend.append('documents', formData.workPermitDetails.document);
       }
 
-      const response = await fetch('http://localhost:5000/applications/submit', {
-        method: 'POST',
-        body: formDataToSend
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit application');
-      }
-
-      await response.json();
+      await submitApplication(formDataToSend);
       setShowSuccess(true);
       setFormData({
         position: '',

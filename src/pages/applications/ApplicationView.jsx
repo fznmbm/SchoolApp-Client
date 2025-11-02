@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Spinner from '../../components/common/Spinner';
 import { useDocumentViewer } from '../../components/common/DocumentViewer';
-import { markApplicationAsRead } from '../../services/application';
+import { getApplicationById, updateApplicationStatus, markApplicationAsRead } from '../../services/application';
 
 const ApplicationView = () => {
   const { id } = useParams();
@@ -19,17 +19,7 @@ const ApplicationView = () => {
 
   const fetchApplication = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/applications/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch application');
-      }
-
-      const data = await response.json();
+      const data = await getApplicationById(id);
       setApplication(data.data);
       
       // Mark application as read when viewed
@@ -43,7 +33,7 @@ const ApplicationView = () => {
       }
     } catch (error) {
       console.error('Error fetching application:', error);
-      setError(error.message);
+      setError(error.response?.data?.message || error.message || 'Failed to fetch application');
     } finally {
       setLoading(false);
     }
@@ -80,24 +70,12 @@ const ApplicationView = () => {
   // Handle status update
   const handleStatusUpdate = async (newStatus) => {
     try {
-      const response = await fetch(`http://localhost:5000/applications/${id}/status`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update application status');
-      }
-
+      await updateApplicationStatus(id, newStatus);
       // Refresh the application data
       fetchApplication();
     } catch (error) {
       console.error('Error updating application status:', error);
-      alert('Failed to update application status');
+      alert(error.response?.data?.message || 'Failed to update application status');
     }
   };
 

@@ -12,6 +12,11 @@ export const getApplicationById = async (id) => {
   return response.data;
 };
 
+export const submitApplication = async (formData) => {
+  const response = await axios.post(`${BASE_URL}/submit`, formData);
+  return response.data;
+};
+
 export const updateApplicationStatus = async (id, status) => {
   const response = await axios.patch(`${BASE_URL}/${id}/status`, { status });
   return response.data;

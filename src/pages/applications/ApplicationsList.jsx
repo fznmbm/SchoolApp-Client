@@ -5,6 +5,7 @@ import { Button } from '@components/common/Button';
 import Table from '../../components/common/table/Table';
 import Card from '../../components/common/Card';
 import Spinner from '../../components/common/Spinner';
+import { getApplications } from '../../services/application';
 
 const ApplicationsList = () => {
   const navigate = useNavigate();
@@ -20,21 +21,11 @@ const ApplicationsList = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await fetch('http://localhost:5000/applications', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch applications');
-      }
-
-      const data = await response.json();
+      const data = await getApplications();
       setApplications(data.data);
     } catch (error) {
       console.error('Error fetching applications:', error);
-      setError(error.message);
+      setError(error.response?.data?.message || error.message || 'Failed to fetch applications');
     } finally {
       setLoading(false);
     }

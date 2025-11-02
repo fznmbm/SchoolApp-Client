@@ -136,19 +136,45 @@ const InvoicePreview = ({ formData, onEdit, onBack, onSubmit, isSubmitting, comp
                 Primary Route
               </dt>
               <dd className="mt-1 text-base text-text-primary dark:text-text-dark-primary transition-colors duration-200">
-                {formData.routeName1 || "Not specified"}
+                {(() => {
+                  // Extract route name from weekly data structure (check first week, all days)
+                  let primaryRoute = formData.routeName1;
+                  if (!primaryRoute && formData.weeks?.[0]?.days) {
+                    for (const day of formData.weeks[0].days) {
+                      if (day.routes?.[0]?.name) {
+                        primaryRoute = day.routes[0].name;
+                        break;
+                      }
+                    }
+                  }
+                  return primaryRoute || "Not specified";
+                })()}
               </dd>
             </div>
-            {formData.useSecondRoute && (
-              <div>
-                <dt className="text-sm font-medium text-text-tertiary dark:text-text-dark-tertiary transition-colors duration-200">
-                  Secondary Route
-                </dt>
-                <dd className="mt-1 text-base text-text-primary dark:text-text-dark-primary transition-colors duration-200">
-                  {formData.routeName2 || "Not specified"}
-                </dd>
-              </div>
-            )}
+            {(() => {
+              // Check if secondary route exists in weekly data structure
+              let secondaryRoute = formData.routeName2;
+              if (!secondaryRoute && formData.weeks?.[0]?.days) {
+                for (const day of formData.weeks[0].days) {
+                  if (day.routes?.[1]?.name) {
+                    secondaryRoute = day.routes[1].name;
+                    break;
+                  }
+                }
+              }
+              const hasSecondRoute = !!secondaryRoute || formData.useSecondRoute;
+              
+              return hasSecondRoute && secondaryRoute ? (
+                <div>
+                  <dt className="text-sm font-medium text-text-tertiary dark:text-text-dark-tertiary transition-colors duration-200">
+                    Secondary Route
+                  </dt>
+                  <dd className="mt-1 text-base text-text-primary dark:text-text-dark-primary transition-colors duration-200">
+                    {secondaryRoute || "Not specified"}
+                  </dd>
+                </div>
+              ) : null;
+            })()}
           </dl>
         </div>
 
