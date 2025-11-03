@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Card from '../../components/common/Card';
 import Spinner from '../../components/common/Spinner';
 import { useDocumentViewer } from '../../components/common/DocumentViewer';
+import { renderApplicationInNewWindow } from '../../services/applicationDownload';
 import { getApplicationById, updateApplicationStatus, markApplicationAsRead } from '../../services/application';
 
 const ApplicationView = () => {
@@ -43,18 +44,25 @@ const ApplicationView = () => {
   const handleViewDocument = (documentUrl, fileName = 'Work Permit Document') => {
     if (!documentUrl) return;
     
-    // Handle Google Drive URLs
+    // Normalize Google Drive URLs to an embeddable preview
     let viewUrl = documentUrl;
-    const isGoogleDrive = documentUrl.includes('drive.google.com/file/d/');
-    
-    if (isGoogleDrive) {
-      // Extract file ID from Google Drive URL
-      const fileIdMatch = documentUrl.match(/\/file\/d\/([^\/]+)/);
-      if (fileIdMatch && fileIdMatch[1]) {
-        const fileId = fileIdMatch[1];
-        // Create a proper embed URL
-        viewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+    let isGoogleDrive = false;
+
+    try {
+      const url = new URL(documentUrl);
+      if (url.hostname.includes('drive.google.com')) {
+        let fileId = null;
+        const filePathMatch = url.pathname.match(/\/file\/d\/([^/]+)/);
+        if (filePathMatch && filePathMatch[1]) fileId = filePathMatch[1];
+        if (!fileId) fileId = url.searchParams.get('id');
+
+        if (fileId) {
+          isGoogleDrive = true;
+          viewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+        }
       }
+    } catch (e) {
+      // Ignore URL parse errors; fall back to original URL
     }
 
     openDocument(viewUrl, {
@@ -63,7 +71,7 @@ const ApplicationView = () => {
       type: 'document',
       fileName: fileName,
       isImage: false,
-      isGoogleDrive: isGoogleDrive
+      isGoogleDrive
     });
   };
 
@@ -120,6 +128,12 @@ const ApplicationView = () => {
             <p className="text-gray-300">View application information</p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => renderApplicationInNewWindow(application)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              View / Print
+            </button>
             {/* Status Update Buttons */}
             <button
               onClick={() => handleStatusUpdate('approved')}
@@ -175,6 +189,22 @@ const ApplicationView = () => {
               <label className="text-sm font-medium text-gray-400 mb-1">Position</label>
               <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.position || '-'}</div>
             </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-400 mb-1">Current Address</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.currentAddress || '-'}</div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-400 mb-1">Previous Address</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.previousAddress || '-'}</div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-400 mb-1">National Insurance Number</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.nationalInsuranceNumber || '-'}</div>
+            </div>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-400 mb-1">Nationality</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.nationality || '-'}</div>
+            </div>
           </div>
         </div>
 
@@ -183,12 +213,14 @@ const ApplicationView = () => {
           <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-3">Work Eligibility</h2>
           <div className="space-y-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-400 mb-1">Right to Work</label>
-              <div className="text-white bg-gray-700 rounded-md px-3 py-2">
-                {application.rightToWork ? 'Yes' : 'No'}
-              </div>
+              <label className="text-sm font-medium text-gray-400 mb-1">UK Driving License</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.hasUKDrivingLicense ? 'Yes' : 'No'}</div>
             </div>
-            {application.workPermitDetails && (
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-400 mb-1">Requires Work Permit</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.requiresWorkPermit ? 'Yes' : 'No'}</div>
+            </div>
+            {(application.workPermitDetails && (application.workPermitDetails.permitNumber || application.workPermitDetails.document)) && (
               <>
                 <div className="flex flex-col">
                   <label className="text-sm font-medium text-gray-400 mb-1">Work Permit Number</label>
@@ -217,24 +249,26 @@ const ApplicationView = () => {
           <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-3">DBS Information</h2>
           <div className="space-y-6">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-gray-400 mb-1">Has DBS</label>
-              <div className="text-white bg-gray-700 rounded-md px-3 py-2">
-                {application.dbsInfo?.hasDBS ? 'Yes' : 'No'}
-              </div>
+              <label className="text-sm font-medium text-gray-400 mb-1">Registered with DBS Update Service</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.dbsInfo?.isRegisteredWithUpdateService ? 'Yes' : 'No'}</div>
             </div>
-            {application.dbsInfo?.hasDBS && (
+            {application.dbsInfo?.isRegisteredWithUpdateService && (
               <>
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-400 mb-1">DBS Number</label>
-                  <div className="text-white bg-gray-700 rounded-md px-3 py-2">
-                    {application.dbsInfo.dbsNumber || '-'}
-                  </div>
+                  <label className="text-sm font-medium text-gray-400 mb-1">Name</label>
+                  <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.dbsInfo.name || '-'}</div>
                 </div>
                 <div className="flex flex-col">
-                  <label className="text-sm font-medium text-gray-400 mb-1">Issue Date</label>
-                  <div className="text-white bg-gray-700 rounded-md px-3 py-2">
-                    {application.dbsInfo.issueDate ? new Date(application.dbsInfo.issueDate).toLocaleDateString() : '-'}
-                  </div>
+                  <label className="text-sm font-medium text-gray-400 mb-1">Date of Birth</label>
+                  <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.dbsInfo.dateOfBirth ? new Date(application.dbsInfo.dateOfBirth).toLocaleDateString() : '-'}</div>
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-400 mb-1">Certificate Number</label>
+                  <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.dbsInfo.certificateNumber || '-'}</div>
+                </div>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-gray-400 mb-1">Update Service ID</label>
+                  <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.dbsInfo.updateServiceId || '-'}</div>
                 </div>
               </>
             )}
@@ -258,14 +292,39 @@ const ApplicationView = () => {
                     <div className="text-white bg-gray-700 rounded-md px-3 py-2">{reference.relationship || '-'}</div>
                   </div>
                   <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-400 mb-1">Contact Number</label>
-                    <div className="text-white bg-gray-700 rounded-md px-3 py-2">{reference.contactNumber || '-'}</div>
+                    <label className="text-sm font-medium text-gray-400 mb-1">Phone</label>
+                    <div className="text-white bg-gray-700 rounded-md px-3 py-2">{reference.phone || '-'}</div>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-400 mb-1">Email</label>
+                    <div className="text-white bg-gray-700 rounded-md px-3 py-2">{reference.email || '-'}</div>
+                  </div>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-400 mb-1">Address</label>
+                    <div className="text-white bg-gray-700 rounded-md px-3 py-2">{reference.address || '-'}</div>
                   </div>
                 </div>
               </div>
             ))}
             {(!application.references || application.references.length === 0) && (
               <div className="text-gray-400 text-center py-4">No references provided</div>
+            )}
+          </div>
+        </div>
+
+        {/* Convictions */}
+        <div className="bg-gray-800 rounded-lg shadow-lg border border-gray-700 p-6 lg:col-span-2">
+          <h2 className="text-xl font-semibold text-white mb-6 border-b border-gray-700 pb-3">Convictions</h2>
+          <div className="space-y-6">
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-gray-400 mb-1">Has Convictions</label>
+              <div className="text-white bg-gray-700 rounded-md px-3 py-2">{application.hasConvictions ? 'Yes' : 'No'}</div>
+            </div>
+            {application.hasConvictions && (
+              <div className="flex flex-col">
+                <label className="text-sm font-medium text-gray-400 mb-1">Details</label>
+                <div className="text-white bg-gray-700 rounded-md px-3 py-2 whitespace-pre-wrap">{application.convictionDetails || '-'}</div>
+              </div>
             )}
           </div>
         </div>

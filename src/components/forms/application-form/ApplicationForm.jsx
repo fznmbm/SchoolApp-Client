@@ -194,9 +194,16 @@ const ApplicationForm = () => {
 
       const formDataToSend = new FormData();
 
+      // Build payload while omitting binary values from JSON (they are sent separately)
+      const payload = { ...formData };
+      if (payload.workPermitDetails) {
+        const { document, ...rest } = payload.workPermitDetails || {};
+        payload.workPermitDetails = rest;
+      }
+
       // Append all text data
-      Object.keys(formData).forEach((key) => {
-        formDataToSend.append(key, JSON.stringify(formData[key]));
+      Object.keys(payload).forEach((key) => {
+        formDataToSend.append(key, JSON.stringify(payload[key]));
       });
 
       // Append file if exists

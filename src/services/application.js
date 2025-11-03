@@ -13,7 +13,11 @@ export const getApplicationById = async (id) => {
 };
 
 export const submitApplication = async (formData) => {
-  const response = await axios.post(`${BASE_URL}/submit`, formData);
+  const response = await axios.post(`${BASE_URL}/submit`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
