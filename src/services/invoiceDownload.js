@@ -231,34 +231,43 @@ const generateCompleteDateRangeFromInvoice = (invoiceData) => {
     return [];
   }
   
-  // Create a map of existing data for lookup
-  const routeDataByDate = new Map();
+  // Collect all days that actually have route data (only include days with routes)
+  const daysWithRoutes = [];
   
-  // Add all existing days from regular assignments to the map
   if (invoiceData.weeks) {
     invoiceData.weeks.forEach(week => {
       if (week.days) {
         week.days.forEach(day => {
-          if (day.date) {
-            const dateString = format(parseISO(day.date), 'yyyy-MM-dd');
-            routeDataByDate.set(dateString, day);
+          // Only include days that have routes with actual data
+          if (day.date && day.routes && day.routes.length > 0) {
+            // Check if at least one route has a name and fare > 0
+            const hasValidRoute = day.routes.some(route => route.name && (Number(route.fare) > 0));
+            if (hasValidRoute) {
+              daysWithRoutes.push(day);
+            }
           }
         });
       }
     });
   }
   
-  // Generate all dates in the range
-  const allDates = eachDayOfInterval({ start: startDate, end: endDate });
+  // If no days with routes, return empty array
+  if (daysWithRoutes.length === 0) {
+    return [];
+  }
   
-  // Group by week
+  // Group by week - only include days that have actual route data
   const weekMap = new Map();
   // Use sequential week numbering for display (Week 1, Week 2, ...)
   let displayWeekCounter = 1;
   
-  allDates.forEach(date => {
+  daysWithRoutes.forEach(day => {
+    if (!day.date) return;
+    
+    const date = parseISO(day.date);
+    if (isNaN(date.getTime())) return;
+    
     const dayOfWeek = getDay(date); // 0 = Sunday, 6 = Saturday
-    const dateString = format(date, 'yyyy-MM-dd');
     // Use Monday as the start of the week for consistency
     const weekStartDate = new Date(date);
     // Adjust to get to Monday (if Sunday, go back 6 days, etc.)
@@ -273,12 +282,11 @@ const generateCompleteDateRangeFromInvoice = (invoiceData) => {
       });
     }
     
-    // Get existing data or create empty day
-    const existingData = routeDataByDate.get(dateString);
-    const dayData = existingData || {
-      day: format(date, 'EEEE'), // Full day name
-      date: dateString,
-      routes: []
+    // Ensure date is in yyyy-MM-dd format for consistency
+    const dayData = {
+      ...day,
+      date: format(date, 'yyyy-MM-dd'),
+      day: day.day || format(date, 'EEEE') // Use existing day name or generate it
     };
     
     weekMap.get(weekKey).days.push(dayData);
@@ -291,8 +299,10 @@ const generateCompleteDateRangeFromInvoice = (invoiceData) => {
     return new Date(a.days[0].date) - new Date(b.days[0].date);
   });
   
-  // Sort days within each week
-  weeks.forEach(week => {
+  // Re-number weeks sequentially after sorting
+  weeks.forEach((week, index) => {
+    week.weekNumber = index + 1;
+    // Sort days within each week
     week.days.sort((a, b) => new Date(a.date) - new Date(b.date));
   });
   
@@ -332,10 +342,25 @@ const generateWeeklyTablesFromInvoice = (weeks, hasSecondRoute) => {
               const route1 = day.routes && day.routes[0];
               const route2 = day.routes && day.routes[1];
               
+              // Format date as "03 Nov 2025"
+              let formattedDate = '';
+              if (day.date) {
+                try {
+                  const dateObj = parseISO(day.date);
+                  if (!isNaN(dateObj.getTime())) {
+                    formattedDate = format(dateObj, 'dd MMM yyyy');
+                  } else {
+                    formattedDate = day.date;
+                  }
+                } catch (error) {
+                  formattedDate = day.date;
+                }
+              }
+              
               return `
                 <tr>
                   <td>${day.day || ''}</td>
-                  <td>${day.date || ''}</td>
+                  <td>${formattedDate}</td>
                   <td class="${!route1 ? 'empty-cell' : ''}">${route1 ? `${route1.name} (${route1.fare})` : ''}</td>
                   <td class="${!route1 ? 'empty-cell' : ''}">${route1 ? `£${route1.fare.toFixed(2)}` : '£0.00'}</td>
                   ${hasSecondRoute ? `

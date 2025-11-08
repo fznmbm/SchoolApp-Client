@@ -125,11 +125,26 @@ const InvoiceDetailsView = ({
       </div>
 
       {/* Weekly Routes Section */}
-      {invoice.weeks && invoice.weeks.length > 0 && (
-        <div className="mb-8">
-          <h4 className="text-sm font-medium text-text-secondary dark:text-text-dark-secondary mb-2 transition-colors duration-200">Weekly Routes</h4>
-          <div className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-lg overflow-hidden border border-border-light dark:border-border-dark transition-colors duration-200">
-            {invoice.weeks.map((week, weekIndex) => (
+      {invoice.weeks && invoice.weeks.length > 0 && (() => {
+        // Filter weeks to only include those with days that have valid routes
+        const validWeeks = invoice.weeks
+          .map(week => {
+            const validDays = week.days?.filter(day => {
+              const validRoutes = day.routes?.filter(route => route.name && (Number(route.fare) > 0)) || [];
+              return validRoutes.length > 0;
+            }) || [];
+            return validDays.length > 0 ? { ...week, days: validDays } : null;
+          })
+          .filter(week => week !== null)
+          .map((week, index) => ({ ...week, weekNumber: index + 1 })); // Re-number weeks sequentially
+
+        if (validWeeks.length === 0) return null;
+
+        return (
+          <div className="mb-8">
+            <h4 className="text-sm font-medium text-text-secondary dark:text-text-dark-secondary mb-2 transition-colors duration-200">Weekly Routes</h4>
+            <div className="bg-surface-secondary dark:bg-surface-dark-secondary rounded-lg overflow-hidden border border-border-light dark:border-border-dark transition-colors duration-200">
+              {validWeeks.map((week, weekIndex) => (
               <div key={`week-${weekIndex}`} className="border-b border-border-light dark:border-border-dark last:border-b-0 transition-colors duration-200">
                 <div className="p-4 bg-surface-tertiary dark:bg-surface-dark-tertiary transition-colors duration-200">
                   <h5 className="font-medium text-text-primary dark:text-text-dark-primary transition-colors duration-200">Week {week.weekNumber}</h5>
@@ -153,57 +168,44 @@ const InvoiceDetailsView = ({
                       </tr>
                     </thead>
                     <tbody className="bg-surface dark:bg-surface-dark divide-y divide-border-light dark:divide-border-dark transition-colors duration-200">
-                      {week.days && week.days.map((day, dayIndex) => {
-                        // Filter routes to only include those with a fare
-                        const validRoutes = day.routes?.filter(route => route.name && (Number(route.fare) > 0)) || [];
+                      {week.days && week.days
+                        .filter(day => {
+                          // Only include days that have routes with actual data
+                          const validRoutes = day.routes?.filter(route => route.name && (Number(route.fare) > 0)) || [];
+                          return validRoutes.length > 0;
+                        })
+                        .map((day, dayIndex) => {
+                          // Filter routes to only include those with a fare
+                          const validRoutes = day.routes?.filter(route => route.name && (Number(route.fare) > 0)) || [];
 
-                        // If no valid routes for this day, still show the day but with empty route/fare
-                        if (validRoutes.length === 0) {
-                          return (
-                            <tr key={`day-${weekIndex}-${dayIndex}`}>
+                          // Create a row for each valid route on this day
+                          return validRoutes.map((route, routeIndex) => (
+                            <tr key={`route-${weekIndex}-${dayIndex}-${routeIndex}`}>
+                              {/* Only show day & date in the first row for this day */}
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary dark:text-text-dark-primary transition-colors duration-200">
-                                {day.day}
+                                {routeIndex === 0 ? day.day : ''}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary dark:text-text-dark-secondary transition-colors duration-200">
-                                {formatDate(day.date)}
+                                {routeIndex === 0 ? formatDate(day.date) : ''}
                               </td>
                               <td className="px-6 py-4 text-sm text-text-secondary dark:text-text-dark-secondary transition-colors duration-200">
-                                -
+                                {route.name}
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-text-primary dark:text-text-dark-primary transition-colors duration-200">
-                                £0.00
+                                £{(Number(route.fare) || 0).toFixed(2)}
                               </td>
                             </tr>
-                          );
-                        }
-
-                        // Otherwise, create a row for each valid route on this day
-                        return validRoutes.map((route, routeIndex) => (
-                          <tr key={`route-${weekIndex}-${dayIndex}-${routeIndex}`}>
-                            {/* Only show day & date in the first row for this day */}
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-primary dark:text-text-dark-primary transition-colors duration-200">
-                              {routeIndex === 0 ? day.day : ''}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-text-secondary dark:text-text-dark-secondary transition-colors duration-200">
-                              {routeIndex === 0 ? formatDate(day.date) : ''}
-                            </td>
-                            <td className="px-6 py-4 text-sm text-text-secondary dark:text-text-dark-secondary transition-colors duration-200">
-                              {route.name}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-text-primary dark:text-text-dark-primary transition-colors duration-200">
-                              £{(Number(route.fare) || 0).toFixed(2)}
-                            </td>
-                          </tr>
-                        ));
-                      })}
+                          ));
+                        })}
                     </tbody>
                   </table>
                 </div>
               </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Extra Jobs Section */}
       {invoice.extraJobs && invoice.extraJobs.length > 0 && (
