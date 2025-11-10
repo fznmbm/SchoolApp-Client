@@ -41,6 +41,7 @@ const WhatsAppMessaging = () => {
   const [manualUrls, setManualUrls] = useState([]);
   const [filters, setFilters] = useState({
     status: 'ACTIVE',
+    limit: 1000, // Fetch all drivers for selector
   });
 
   const { data: drivers,

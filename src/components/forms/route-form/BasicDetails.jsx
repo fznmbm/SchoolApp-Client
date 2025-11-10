@@ -36,16 +36,16 @@ const BasicDetails = ({ onCapacityChange }) => {
   
   const { data: vendorsData, isLoading: loadingVendors } = useQuery({
     queryKey: ["vendors", { status: "Active" }],
-    queryFn: () => getAllVendors({ status: "Active" }),
+    queryFn: () => getAllVendors({ status: "Active", limit: 1000 }), // Fetch all vendors for selector
   });
   
-  const vendorOptions = useMemo(() => 
-    vendorsData?.map(vendor => ({
+  const vendorOptions = useMemo(() => {
+    const vendorsList = Array.isArray(vendorsData) ? vendorsData : (vendorsData?.data || []);
+    return vendorsList.map(vendor => ({
       id: vendor._id,
       name: vendor.name
-    })) || [], 
-    [vendorsData]
-  );
+    }));
+  }, [vendorsData]);
   
   useEffect(() => {
     if (!values.operatingDays || values.operatingDays.length === 0) {

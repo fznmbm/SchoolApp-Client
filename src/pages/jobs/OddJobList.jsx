@@ -164,10 +164,10 @@ const OddJobList = () => {
   }, [navigate]);
 
   const paginationProps = useMemo(() => ({
-    currentPage: searchParams.page,
+    currentPage: Number(rawData?.currentPage) || searchParams.page,
     totalPages: rawData?.totalPages || 1,
     onPageChange: handlePageChange,
-  }), [searchParams.page, rawData?.totalPages, handlePageChange]);
+  }), [searchParams.page, rawData?.totalPages, rawData?.currentPage, handlePageChange]);
 
   const items = useMemo(() => {
     if (!rawData) return [];

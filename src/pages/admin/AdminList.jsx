@@ -105,10 +105,10 @@ const AdminList = () => {
       )}
 
       <AdminTable
-        data={data}
+        data={data?.data}
         isLoading={isLoading}
         pagination={{
-          currentPage: searchParams.page,
+          currentPage: Number(data?.currentPage) || searchParams.page,
           totalPages: data?.totalPages || 1,
           onPageChange: handlePageChange,
         }}

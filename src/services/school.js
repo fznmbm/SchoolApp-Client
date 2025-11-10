@@ -2,7 +2,7 @@ import axios from '@utils/api/axios';
 
 export const getAllSchools = async (params) => {
   const response = await axios.get('/schools', { params });
-  return response.data.data;
+  return response.data;
 };
 
 export const getSchool = async (id) => {

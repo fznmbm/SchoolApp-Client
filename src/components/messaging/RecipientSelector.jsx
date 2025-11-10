@@ -22,6 +22,7 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
 
   const [filters, setFilters] = useState({
     status: 'ACTIVE',
+    limit: 1000, // Fetch all drivers for selector
   });
 
   const { data: drivers,
@@ -35,15 +36,24 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
     isLoading: pasLoading,
     error: pasError } = useQuery({
       queryKey: ['pas', { status: 'ACTIVE' }],
-      queryFn: () => getAllPAs({ status: 'ACTIVE' }),
+      queryFn: () => getAllPAs({ status: 'ACTIVE', limit: 1000 }), // Fetch all PAs for selector
     });
 
+  // Extract drivers array from response (handles both array and object responses)
+  const driversList = useMemo(() => {
+    return Array.isArray(drivers) ? drivers : (drivers?.data || []);
+  }, [drivers]);
+
+  // Extract PAs array from response (handles both array and object responses)
+  const pasList = useMemo(() => {
+    return Array.isArray(pas) ? pas : (pas?.data || []);
+  }, [pas]);
 
   // Update selected items when selected prop changes
   const currentSelectedItems = useMemo(() => {
     return selected.map(phoneNumber => {
       // Try to find the driver with this phone number
-      const driver = drivers?.find(d => d.phoneNumber === phoneNumber);
+      const driver = driversList?.find(d => d.phoneNumber === phoneNumber);
       if (driver) {
         return {
           id: driver._id,
@@ -55,7 +65,7 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
       }
       
       // Try to find the PA with this phone number
-      const pa = pas?.data?.find(p => p.contact?.phone === phoneNumber);
+      const pa = pasList?.find(p => p.contact?.phone === phoneNumber);
       if (pa) {
         return {
           id: pa._id,
@@ -74,7 +84,7 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
         type: 'custom'
       };
     });
-  }, [selected, drivers, pas]);
+  }, [selected, driversList, pasList]);
 
   // Only update state when items actually change
   useEffect(() => {
@@ -139,7 +149,7 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
 
   // Select all drivers
   const handleSelectAllDrivers = () => {
-    const driverPhoneNumbers = drivers
+    const driverPhoneNumbers = driversList
       ?.filter(driver => driver.phoneNumber)
       ?.map(driver => driver.phoneNumber) || [];
     
@@ -149,7 +159,7 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
 
   // Select all PAs
   const handleSelectAllPAs = () => {
-    const paPhoneNumbers = pas?.data
+    const paPhoneNumbers = pasList
       ?.filter(pa => pa.contact?.phone)
       ?.map(pa => pa.contact.phone) || [];
     
@@ -159,11 +169,11 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
 
   // Select all staff (drivers + PAs)
   const handleSelectAllStaff = () => {
-    const driverPhoneNumbers = drivers
+    const driverPhoneNumbers = driversList
       ?.filter(driver => driver.phoneNumber)
       ?.map(driver => driver.phoneNumber) || [];
     
-    const paPhoneNumbers = pas?.data
+    const paPhoneNumbers = pasList
       ?.filter(pa => pa.contact?.phone)
       ?.map(pa => pa.contact.phone) || [];
     
@@ -331,26 +341,26 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
                 <button
                   type="button"
                   onClick={handleSelectAllDrivers}
-                  disabled={!drivers?.length}
+                  disabled={!driversList?.length}
                   className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Select All Drivers ({drivers?.filter(d => d.phoneNumber)?.length || 0})
+                  Select All Drivers ({driversList?.filter(d => d.phoneNumber)?.length || 0})
                 </button>
                 <button
                   type="button"
                   onClick={handleSelectAllPAs}
-                  disabled={!pas?.data?.length}
+                  disabled={!pasList?.length}
                   className="px-3 py-1 text-xs bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full hover:bg-green-200 dark:hover:bg-green-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Select All PAs ({pas?.data?.filter(p => p.contact?.phone)?.length || 0})
+                  Select All PAs ({pasList?.filter(p => p.contact?.phone)?.length || 0})
                 </button>
                 <button
                   type="button"
                   onClick={handleSelectAllStaff}
-                  disabled={!drivers?.length && !pas?.data?.length}
+                  disabled={!driversList?.length && !pasList?.length}
                   className="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Select All Staff ({(drivers?.filter(d => d.phoneNumber)?.length || 0) + (pas?.data?.filter(p => p.contact?.phone)?.length || 0)})
+                  Select All Staff ({(driversList?.filter(d => d.phoneNumber)?.length || 0) + (pasList?.filter(p => p.contact?.phone)?.length || 0)})
                 </button>
               </div>
             </div>
@@ -404,8 +414,8 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
                 {/* PA list */}
                 {!pasLoading && !pasError && (
                   <>
-                    {pas?.data && pas.data.length > 0 ? (
-                      pas.data
+                    {pasList && pasList.length > 0 ? (
+                      pasList
                         .filter(pa => {
                           if (!searchTerm) return true;
                           const searchLower = searchTerm.toLowerCase();
@@ -512,8 +522,8 @@ const RecipientSelector = ({ selected = [], onChange, singleRecipient = false })
                 {/* Driver list */}
                 {!driversLoading && !driversError && (
                   <>
-                    {drivers && drivers.length > 0 ? (
-                      drivers
+                    {driversList && driversList.length > 0 ? (
+                      driversList
                         .filter(driver => {
                           if (!searchTerm) return true;
                           const searchLower = searchTerm.toLowerCase();

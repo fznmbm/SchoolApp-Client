@@ -147,10 +147,7 @@ const DriverTable = ({ data, isLoading, pagination, onDelete = () => {} }) => {
         columns={columns}
         data={activeDrivers}
         isLoading={isLoading}
-        pagination={{
-          ...pagination,
-          totalPages: Math.ceil(activeDrivers.length / (pagination?.limit || 10))
-        }}
+        pagination={pagination}
         emptyStateMessage="No active drivers found"
       />
     </div>

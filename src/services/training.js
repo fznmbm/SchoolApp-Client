@@ -15,7 +15,7 @@ export const getAllTrainings = async (params = {}) => {
       status: params.status
     }
   });
-  return response.data.data;
+  return response.data;
 };
 
 export const getTraining = async (id) => {

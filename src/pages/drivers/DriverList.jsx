@@ -161,7 +161,7 @@ const DriverList = () => {
       </div>
 
       <DriverTable
-        data={data}
+        data={data?.data}
         isLoading={isLoading}
         filters={filters}
         onFilterChange={setFilters}

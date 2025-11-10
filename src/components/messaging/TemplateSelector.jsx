@@ -57,12 +57,12 @@ const TemplateSelector = ({ onTemplateSelect, onCustomMessage, onStaffSelect, sh
   // Fetch drivers and PAs
   const { data: drivers } = useQuery({
     queryKey: ['drivers', { status: 'ACTIVE' }],
-    queryFn: () => getDrivers({ status: 'ACTIVE' }),
+    queryFn: () => getDrivers({ status: 'ACTIVE', limit: 1000 }), // Fetch all drivers for selector
   });
 
   const { data: pas } = useQuery({
     queryKey: ['pas'],
-    queryFn: () => getAllPAs(),
+    queryFn: () => getAllPAs({ limit: 1000 }), // Fetch all PAs for selector
   });
 
   // Fetch custom templates from DB
@@ -76,8 +76,9 @@ const TemplateSelector = ({ onTemplateSelect, onCustomMessage, onStaffSelect, sh
   useEffect(() => {
     const combinedStaff = [];
     
-    if (drivers && Array.isArray(drivers)) {
-      drivers.forEach(driver => {
+    const driversList = Array.isArray(drivers) ? drivers : (drivers?.data || []);
+    if (driversList && driversList.length > 0) {
+      driversList.forEach(driver => {
         if (driver.name && driver.phoneNumber) {
           combinedStaff.push({
             id: driver._id,
@@ -90,13 +91,14 @@ const TemplateSelector = ({ onTemplateSelect, onCustomMessage, onStaffSelect, sh
       });
     }
     
-    if (pas && Array.isArray(pas)) {
-      pas.forEach(pa => {
-        if (pa.name && pa.phoneNumber) {
+    const pasList = Array.isArray(pas) ? pas : (pas?.data || []);
+    if (pasList && pasList.length > 0) {
+      pasList.forEach(pa => {
+        if (pa.name && pa.contact?.phone) {
           combinedStaff.push({
             id: pa._id,
             name: pa.name,
-            phoneNumber: pa.phoneNumber,
+            phoneNumber: pa.contact.phone,
             type: 'PA',
             typeIcon: UserIcon
           });

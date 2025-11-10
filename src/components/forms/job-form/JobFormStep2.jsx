@@ -129,13 +129,13 @@ const JobFormStep2 = ({
 
   const { data: routesData, isLoading: isRoutesLoading } = useQuery({
     queryKey: ["routes", searchParams],
-    queryFn: () => getRoutes(searchParams),
+    queryFn: () => getRoutes({ ...searchParams, limit: 1000 }), // Fetch all routes for selector
     onSuccess: (data) => {
       // Routes fetched successfully
     }
   });
 
-  const routes = routesData || [];
+  const routes = Array.isArray(routesData) ? routesData : (routesData?.data || []);
 
   const initialValues = {
     ...formData

@@ -143,12 +143,23 @@ const JobList = () => {
     navigate("/jobs/create");
   }, [navigate]);
 
+  // Extract jobs array and pagination info
+  const jobsData = useMemo(() => {
+    if (!data) return { jobs: [], totalPages: 1, currentPage: 1 };
+    if (Array.isArray(data)) return { jobs: data, totalPages: 1, currentPage: 1 };
+    return {
+      jobs: data.data || [],
+      totalPages: data.totalPages || 1,
+      currentPage: data.currentPage || searchParams.page
+    };
+  }, [data, searchParams.page]);
+
   // Pagination object with memoization
   const paginationProps = useMemo(() => ({
-    currentPage: searchParams.page,
-    totalPages: data?.totalPages || 1,
+    currentPage: Number(jobsData.currentPage) || searchParams.page,
+    totalPages: jobsData.totalPages || 1,
     onPageChange: handlePageChange,
-  }), [searchParams.page, data?.totalPages, handlePageChange]);
+  }), [searchParams.page, jobsData.totalPages, jobsData.currentPage, handlePageChange]);
 
   return (
     <motion.div
@@ -178,7 +189,7 @@ const JobList = () => {
       {isDeleteError && <ErrorAlert message={deleteError?.message} />}
 
       <JobTable
-        data={data}
+        data={jobsData.jobs}
         isLoading={isLoading}
         filters={searchParams}
         onFilterChange={handleFilterChange}

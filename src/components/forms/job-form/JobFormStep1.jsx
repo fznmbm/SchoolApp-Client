@@ -51,17 +51,18 @@ const JobFormStep1 = ({
 
   const { data: routes, isLoading: isRoutesLoading } = useQuery({
     queryKey: ["routes", searchParams],
-    queryFn: () => getRoutes(searchParams),
+    queryFn: () => getRoutes({ ...searchParams, limit: 1000 }), // Fetch all routes for selector
   });
 
-  const routeOptions = routes?.map((route) => ({
+  const routesList = Array.isArray(routes) ? routes : (routes?.data || []);
+  const routeOptions = routesList.map((route) => ({
     id: route._id,
-    name: route.name,
-  })) || [];
+    name: `${route.routeNo} ${route.name || ''}`,
+  }));
 
   const handleRouteChange = useCallback(async (data, setFieldValue) => {
     const routeId = data.id;
-    const route = routes?.find((r) => r._id === routeId);
+    const route = routesList.find((r) => r._id === routeId);
     setSelectedRoute(route);
     setFieldValue("route", routeId);
     

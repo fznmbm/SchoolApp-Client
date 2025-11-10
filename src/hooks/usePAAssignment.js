@@ -16,13 +16,13 @@ export const usePAAssignment = (route, routeId) => {
   // Query for all PAs
   const { data } = useQuery({
     queryKey: ['pas'],
-    queryFn: () => getAllPAs(),
+    queryFn: () => getAllPAs({ limit: 1000 }), // Fetch all PAs for selector
     enabled: showPAForm // Only fetch when form is shown
   });
   
   // Extract the actual array from the API response
   // API responses often have format { data: [...] }
-  const pasData = data?.data || [];
+  const pasData = Array.isArray(data) ? data : (data?.data || []);
 
   // Effect to set initial values for forms when route data is loaded
   useEffect(() => {

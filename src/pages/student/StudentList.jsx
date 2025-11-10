@@ -223,7 +223,7 @@ const StudentList = () => {
                          transition-colors duration-200"
             >
               <option value="">All Schools</option>
-              {schoolsData?.map(school => (
+              {(Array.isArray(schoolsData) ? schoolsData : schoolsData?.data)?.map(school => (
                 <option key={school._id} value={school._id}>
                   {school.name}
                 </option>

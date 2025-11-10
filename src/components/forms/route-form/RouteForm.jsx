@@ -147,6 +147,7 @@ const RouteForm = ({ onSubmit, isError, error, isPending, editInitialValues, val
   const { data: schools } = useQuery({
     queryKey: ["schools"],
     queryFn: getAllSchools,
+    select: (data) => Array.isArray(data) ? data : (data?.data || []),
   });
 
   const { data: students } = useQuery({

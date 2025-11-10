@@ -79,7 +79,7 @@ const InvoiceList = () => {
   });
 
   const usersData = userType === 'DRIVER'
-    ? (Array.isArray(usersResponse) ? usersResponse : [])
+    ? (Array.isArray(usersResponse) ? usersResponse : (usersResponse?.data || []))
     : (usersResponse?.data || []);
 
   // Fetch all labels for filtering
@@ -343,7 +343,7 @@ const InvoiceList = () => {
 
   // Configure pagination
   const pagination = invoicesData ? {
-    currentPage: parseInt(page),
+    currentPage: Number(invoicesData.currentPage) || parseInt(page),
     totalPages: invoicesData.totalPages || 1,
     onPageChange: (newPage) => setPage(newPage)
   } : null;

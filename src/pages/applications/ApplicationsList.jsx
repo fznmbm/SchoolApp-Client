@@ -1,35 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { Button } from '@components/common/Button';
 import Table from '../../components/common/table/Table';
-import Card from '../../components/common/Card';
-import Spinner from '../../components/common/Spinner';
+import { motion } from 'framer-motion';
 import { getApplications } from '../../services/application';
 
 const ApplicationsList = () => {
   const navigate = useNavigate();
-  const [applications, setApplications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [searchParams, setSearchParams] = useState({
+    page: 1,
+    limit: 10,
+    search: '',
+    status: ''
+  });
 
-  useEffect(() => {
-    fetchApplications();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['applications', searchParams],
+    queryFn: () => getApplications(searchParams),
+  });
+
+  const handlePageChange = useCallback((page) => {
+    setSearchParams((prev) => ({ ...prev, page }));
   }, []);
 
+  const applications = useMemo(() => {
+    return data?.data || [];
+  }, [data]);
 
-
-  const fetchApplications = async () => {
-    try {
-      const data = await getApplications();
-      setApplications(data.data);
-    } catch (error) {
-      console.error('Error fetching applications:', error);
-      setError(error.response?.data?.message || error.message || 'Failed to fetch applications');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const totalApplications = data?.total || 0;
 
 
 
@@ -96,26 +96,12 @@ const ApplicationsList = () => {
     }
   ];
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4">
-        <Card className="bg-red-50 border-red-200">
-          <div className="text-red-700">Error: {error}</div>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 bg-surface dark:bg-surface-dark transition-colors duration-200">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-6 bg-surface dark:bg-surface-dark transition-colors duration-200"
+    >
       {/* Header Section */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-text-primary dark:text-white mb-2">Applications</h1>
@@ -126,7 +112,7 @@ const ApplicationsList = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-border-light dark:border-border-dark transition-colors duration-200">
           <div className="text-sm text-text-secondary dark:text-gray-300">Total Applications</div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{applications.length}</div>
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{totalApplications}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-border-light dark:border-border-dark transition-colors duration-200">
           <div className="text-sm text-text-secondary dark:text-gray-300">Approved</div>
@@ -153,10 +139,22 @@ const ApplicationsList = () => {
         <Table
           columns={columns}
           data={applications}
+          isLoading={isLoading}
+          pagination={{
+            currentPage: Number(data?.currentPage) || searchParams.page,
+            totalPages: data?.totalPages || 1,
+            onPageChange: handlePageChange,
+          }}
           className="w-full"
         />
       </div>
-    </div>
+
+      {error && (
+        <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="text-red-700 dark:text-red-300">Error: {error?.message || 'Failed to fetch applications'}</div>
+        </div>
+      )}
+    </motion.div>
   );
 };
 

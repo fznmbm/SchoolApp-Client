@@ -2,7 +2,7 @@ import api from '@utils/api/axios';
 
 export const getRoutes = async (params) => {
   const response = await api.get('/routes', { params });
-  return response.data.data;
+  return response.data;
 };
 
 export const getRoute = async (id) => {

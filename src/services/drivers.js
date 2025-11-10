@@ -2,7 +2,7 @@ import axios from "../utils/api/axios";
 
 export const getDrivers = async (params) => {
   const response = await axios.get("/drivers", { params });
-  return response.data.data;
+  return response.data;
 };
 
 export const deleteDriverById = async (id) => {

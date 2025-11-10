@@ -2,7 +2,7 @@ import axios from '@utils/api/axios';
 
 export const getAllVendors = async (params) => {
   const response = await axios.get('/vendors', { params });
-  return response.data.data;
+  return response.data;
 };
 
 export const getVendor = async (id) => {

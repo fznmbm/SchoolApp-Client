@@ -93,20 +93,20 @@ const StudentForm = ({
 
   const { data: routes, isLoading: routesLoading } = useQuery({
     queryKey: ["routes"],
-    queryFn: () => getRoutes({ isActive: true }),
+    queryFn: () => getRoutes({ isActive: true, limit: 1000 }), // Fetch all routes for selector
   });
 
   const schoolOptions =
-    schools?.map((school) => ({
+    (Array.isArray(schools) ? schools : schools?.data)?.map((school) => ({
       id: school._id,
       name: school.name,
     })) || [];
 
   const routeOptions = [
     { id: null, name: "No Route Assignment" },
-    ...(routes?.map((route) => ({
+    ...((Array.isArray(routes) ? routes : routes?.data)?.map((route) => ({
       id: route._id,
-      name: `Route ${route.routeNo} - ${route.name}`,
+      name: `${route.routeNo} ${route.name || ''}`,
     })) || [])
   ];
 

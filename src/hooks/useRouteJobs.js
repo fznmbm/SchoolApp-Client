@@ -24,16 +24,17 @@ export const useRouteJobs = () => {
         error: routesError
     } = useQuery({
         queryKey: ['routes'],
-        queryFn: () => getRoutes(),
+        queryFn: () => getRoutes({ limit: 1000 }), // Fetch all routes for selector
     });
 
     // Convert routes to option format for the Select component
     const routeOptions = useMemo(() => {
-        return routesData ? routesData.map(route => ({
+        const routesList = Array.isArray(routesData) ? routesData : (routesData?.data || []);
+        return routesList.map(route => ({
             id: route._id, // Use MongoDB _id for the route
             routeNo: route.routeNo, // Keep routeNo for display
-            name: `Route ${route.routeNo} - ${route.name || ''}`,
-        })) : [];
+            name: `${route.routeNo} ${route.name || ''}`,
+        }));
     }, [routesData]);
 
     // Get selected route information for display

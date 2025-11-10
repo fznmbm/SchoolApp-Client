@@ -29,9 +29,8 @@ const AdminTable = ({ data, isLoading, pagination, onDelete }) => {
   const navigate = useNavigate();
   
   const activeAdmins = useMemo(() => {
-    return Array.isArray(data?.data) 
-      ? data.data.filter((admin) => admin.isActive) 
-      : [];
+    const adminsList = Array.isArray(data) ? data : (data?.data || []);
+    return adminsList.filter((admin) => admin.isActive);
   }, [data]);
 
   const columns = useMemo(() => [

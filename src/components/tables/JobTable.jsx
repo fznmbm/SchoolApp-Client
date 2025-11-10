@@ -220,9 +220,8 @@ const JobTable = ({ data, isLoading, filters, onFilterChange, pagination, onDele
     queryKey: ['routes'],
     queryFn: () => getRoutes({ limit: 100 }), 
     select: (data) => {
-      return Array.isArray(data)
-        ? data.map(route => ({ id: route._id, name: route.name }))
-        : [];
+      const routesList = Array.isArray(data) ? data : (data?.data || []);
+      return routesList.map(route => ({ id: route._id, name: `${route.routeNo} ${route.name || ''}` }));
     },
     staleTime: 5 * 60 * 1000 
   });

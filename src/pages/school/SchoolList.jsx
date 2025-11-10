@@ -90,9 +90,13 @@ const SchoolList = () => {
         aria-labelledby="page-heading"
       >
         <SchoolTable
-          data={data}
+          data={data?.data}
           isLoading={isLoading}
-          pagination={paginationProps}
+          pagination={{
+            currentPage: Number(data?.currentPage) || searchParams.page,
+            totalPages: data?.totalPages || 1,
+            onPageChange: handlePageChange,
+          }}
           onDelete={handleDelete}
         />
       </div>

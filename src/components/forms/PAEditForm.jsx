@@ -221,8 +221,8 @@ const PAForm = ({
 
   const trainingsOptions = React.useMemo(() => {
     if (!trainingsResponse) return [];
-
-    return trainingsResponse.map(training => ({
+    const trainingsList = Array.isArray(trainingsResponse) ? trainingsResponse : (trainingsResponse?.data || []);
+    return trainingsList.map(training => ({
       id: training._id,
       name: training.trainingName
     }));
